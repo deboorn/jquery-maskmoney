@@ -1,6 +1,17 @@
 # jQuery maskMoney [![Build Status](https://travis-ci.org/plentz/jquery-maskmoney.png)](https://travis-ci.org/plentz/jquery-maskmoney)
+***
+
+### What's different in this fork?
+- Fork was created to add support for "input" event of "keypress" for browsers that support "input" event.
+- The "keypress" deprecated. Also, newest virtual keyboards on Android don't always return key codes.
+
+### Does this fork support IE 8 & 9?
+- Yes, in the event "input" event is not supported it defaults to the standard "keypress"
+
+
 
 Just a simple way to create masks to your currency form fields with [jQuery](http://jquery.com/).
+
 
 ***
 ### Download
@@ -89,6 +100,7 @@ npm install && grunt test
  * [Daniel Loureiro](https://github.com/loureirorg)
  * [Thiago Silva](http://twitter.com/tafs7/)
  * [Guilherme Nagatomo](https://github.com/guilhermehn)
+* [Daniel Boorn](https://github.com/deboorn)
 
 ***
 ### License:
