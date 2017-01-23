@@ -1,10 +1,10 @@
 /*
- *  jquery-maskmoney - v3.0.2
- *  jQuery plugin to mask data entry in the input text in the form of money (currency)
- *  https://github.com/plentz/jquery-maskmoney
+ *  <%= pkg.title || pkg.name %> - v<%= pkg.version %>
+ *  <%= pkg.description %>
+ *  <%= pkg.homepage %>
  *
- *  Made by Diego Plentz
- *  Under MIT License (https://raw.github.com/plentz/jquery-maskmoney/master/LICENSE)
+ *  Made by <%= pkg.author.name %>
+ *  Under <%= pkg.licenses[0].type %> License (<%= pkg.licenses[0].url %>)
  */
 (function ($) {
     "use strict";
@@ -28,12 +28,8 @@
 
         mask : function (value) {
             return this.each(function () {
-                var $this = $(this),
-                    decimalSize;
+                var $this = $(this);
                 if (typeof value === "number") {
-                    $this.trigger("mask");
-                    decimalSize = $($this.val().split(/\D/)).last()[0].length;
-                    value = value.toFixed(decimalSize);
                     $this.val(value);
                 }
                 return $this.trigger("mask");
@@ -50,7 +46,7 @@
                     if(element) {
                         decimalPart = element;
                         return false;
-                   }
+                    }
                 });
                 value = value.replace(/\D/g, "");
                 value = value.replace(new RegExp(decimalPart + "$"), "." + decimalPart);
@@ -61,8 +57,8 @@
             });
         },
 
-        init : function (settings) {
-            settings = $.extend({
+        init : function (parameters) {
+            parameters = $.extend({
                 prefix: "",
                 suffix: "",
                 affixesStay: true,
@@ -71,13 +67,14 @@
                 precision: 2,
                 allowZero: false,
                 allowNegative: false
-            }, settings);
+            }, parameters);
 
             return this.each(function () {
-                var $input = $(this),
+                var $input = $(this), settings,
                     onFocusValue;
 
                 // data-* api
+                settings = $.extend({}, parameters);
                 settings = $.extend(settings, $input.data());
 
                 function getInputSelection() {
@@ -191,6 +188,7 @@
                     return setSymbol(newValue);
                 }
 
+
                 function maskAndPosition(startPos) {
                     var originalLen = $input.val().length,
                         newLen;
@@ -202,6 +200,9 @@
 
                 function mask() {
                     var value = $input.val();
+                    if (settings.precision > 0 && value.indexOf(settings.decimal) < 0) {
+                        value += settings.decimal + new Array(settings.precision+1).join(0);
+                    }
                     $input.val(maskValue(value));
                 }
 
@@ -245,11 +246,11 @@
                         if (key === 45) {
                             $input.val(changeSign());
                             return false;
-                        // +(plus) key
+                            // +(plus) key
                         } else if (key === 43) {
                             $input.val($input.val().replace("-", ""));
                             return false;
-                        // enter key or tab key
+                            // enter key or tab key
                         } else if (key === 13 || key === 9) {
                             return true;
                         } else if ($.browser.mozilla && (key === 37 || key === 39) && e.charCode === 0) {
@@ -309,7 +310,7 @@
                                     startPos = value.length - lastNumber - 1;
                                     endPos = startPos + 1;
                                 }
-                            //delete
+                                //delete
                             } else {
                                 endPos += 1;
                             }
@@ -384,8 +385,64 @@
                     }
                 }
 
+                function inputEvent(e){
+                    e = e || window.event;
+                    e.which = $input.val().charCodeAt($input.val().length-1);
+
+                    var key = e.which || e.charCode || e.keyCode,
+                        keyPressedChar,
+                        selection,
+                        startPos;
+
+                    $input.val($input.val().replace(/[^0-9.]/g, ""));
+
+                    //added to handle an IE "special" event
+                    if (key === undefined) {
+                        return false;
+                    }
+
+                    // any key except the numbers 0-9
+                    if (key < 48 || key > 57) {
+                        // -(minus) key
+                        if (key === 45) {
+                            $input.val(changeSign());
+                            return false;
+                            // +(plus) key
+                        } else if (key === 43) {
+                            $input.val($input.val().replace("-", ""));
+                            return false;
+                            // enter key or tab key
+                        } else if (key === 13 || key === 9) {
+                            return true;
+                        } else if ($.browser.mozilla && (key === 37 || key === 39) && e.charCode === 0) {
+                            // needed for left arrow key or right arrow key with firefox
+                            // the charCode part is to avoid allowing "%"(e.charCode 0, e.keyCode 37)
+                            return true;
+                        } else { // any other key with keycode less than 48 and greater than 57
+                            preventDefault(e);
+                            return true;
+                        }
+                    } else if (!canInputMoreNumbers()) {
+                        return false;
+                    } else {
+                        preventDefault(e);
+
+                        keyPressedChar = String.fromCharCode(key);
+                        selection = getInputSelection();
+                        startPos = selection.start;
+                        maskAndPosition(startPos + 1);
+                        return false;
+                    }
+                }
+
                 $input.unbind(".maskMoney");
-                $input.bind("keypress.maskMoney", keypressEvent);
+
+                if(typeof $input.get(0).oninput !== "undefined"){
+                    $input.bind("input.maskMoney", inputEvent);
+                }else{
+                    $input.bind("keypress.maskMoney", keypressEvent);
+                }
+
                 $input.bind("keydown.maskMoney", keydownEvent);
                 $input.bind("blur.maskMoney", blurEvent);
                 $input.bind("focus.maskMoney", focusEvent);

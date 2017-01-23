@@ -38,7 +38,7 @@
                     if(element) {
                         decimalPart = element;
                         return false;
-                   }
+                    }
                 });
                 value = value.replace(/\D/g, "");
                 value = value.replace(new RegExp(decimalPart + "$"), "." + decimalPart);
@@ -238,11 +238,11 @@
                         if (key === 45) {
                             $input.val(changeSign());
                             return false;
-                        // +(plus) key
+                            // +(plus) key
                         } else if (key === 43) {
                             $input.val($input.val().replace("-", ""));
                             return false;
-                        // enter key or tab key
+                            // enter key or tab key
                         } else if (key === 13 || key === 9) {
                             return true;
                         } else if ($.browser.mozilla && (key === 37 || key === 39) && e.charCode === 0) {
@@ -302,7 +302,7 @@
                                     startPos = value.length - lastNumber - 1;
                                     endPos = startPos + 1;
                                 }
-                            //delete
+                                //delete
                             } else {
                                 endPos += 1;
                             }
@@ -377,8 +377,64 @@
                     }
                 }
 
+                function inputEvent(e){
+                    e = e || window.event;
+                    e.which = $input.val().charCodeAt($input.val().length-1);
+
+                    var key = e.which || e.charCode || e.keyCode,
+                        keyPressedChar,
+                        selection,
+                        startPos;
+
+                    $input.val($input.val().replace(/[^0-9.]/g, ""));
+
+                    //added to handle an IE "special" event
+                    if (key === undefined) {
+                        return false;
+                    }
+
+                    // any key except the numbers 0-9
+                    if (key < 48 || key > 57) {
+                        // -(minus) key
+                        if (key === 45) {
+                            $input.val(changeSign());
+                            return false;
+                            // +(plus) key
+                        } else if (key === 43) {
+                            $input.val($input.val().replace("-", ""));
+                            return false;
+                            // enter key or tab key
+                        } else if (key === 13 || key === 9) {
+                            return true;
+                        } else if ($.browser.mozilla && (key === 37 || key === 39) && e.charCode === 0) {
+                            // needed for left arrow key or right arrow key with firefox
+                            // the charCode part is to avoid allowing "%"(e.charCode 0, e.keyCode 37)
+                            return true;
+                        } else { // any other key with keycode less than 48 and greater than 57
+                            preventDefault(e);
+                            return true;
+                        }
+                    } else if (!canInputMoreNumbers()) {
+                        return false;
+                    } else {
+                        preventDefault(e);
+
+                        keyPressedChar = String.fromCharCode(key);
+                        selection = getInputSelection();
+                        startPos = selection.start;
+                        maskAndPosition(startPos + 1);
+                        return false;
+                    }
+                }
+
                 $input.unbind(".maskMoney");
-                $input.bind("keypress.maskMoney", keypressEvent);
+
+                if(typeof $input.get(0).oninput !== "undefined"){
+                    $input.bind("input.maskMoney", inputEvent);
+                }else{
+                    $input.bind("keypress.maskMoney", keypressEvent);
+                }
+
                 $input.bind("keydown.maskMoney", keydownEvent);
                 $input.bind("blur.maskMoney", blurEvent);
                 $input.bind("focus.maskMoney", focusEvent);
